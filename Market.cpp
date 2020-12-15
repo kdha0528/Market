@@ -14,7 +14,7 @@ private:
 	bool logIn;
 public:
 	User() {}
-	~User(){}
+	~User() {}
 	User(string id, string pw, string name, string phone, int money, bool logIn) {
 		this->id = id;
 		this->pw = pw;
@@ -229,52 +229,214 @@ public:
 		this->productHead = NULL;
 		this->productTail = NULL;
 	}
-	Category* getData() { 
-		return data; 
+	Category* getData() {
+		return data;
 	}
-	CategoryNode* getPrev() { 
-		return prev; 
+	CategoryNode* getPrev() {
+		return prev;
 	}
-	CategoryNode* getNext() { 
-		return next; 
+	CategoryNode* getNext() {
+		return next;
 	}
 	ProductNode* getProductHead() {
-		return productHead; 
+		return productHead;
 	}
 	ProductNode* getProductTail() {
-		return productTail; 
+		return productTail;
 	}
 	void setData(Category* date) {
-		this->data = data; 
+		this->data = data;
 	}
-	void setPrev(CategoryNode* ctg) { 
-		prev = ctg; 
+	void setPrev(CategoryNode* ctg) {
+		prev = ctg;
 	}
-	void setNext(CategoryNode* ctg) { 
-		next = ctg; 
+	void setNext(CategoryNode* ctg) {
+		next = ctg;
 	}
-	void setProductHead(ProductNode* product) { 
-		productHead = product; 
+	void setProductHead(ProductNode* product) {
+		productHead = product;
 	}
 	void setProductTail(ProductNode* product) {
-		productTail = product; 
+		productTail = product;
 	}
-	void show() { 
-		cout << "CATEGORY " << "[" << this->data->getCtg() << "]" << endl; 
+	void show() {
+		cout << "CATEGORY " << "[" << this->data->getCtg() << "]" << endl;
 	}
 };
 class Market {
 private:
-	UserNode* userHead;
-	UserNode* userTail;
+	UserNode* userHead = NULL;
+	UserNode* userTail = NULL;
 	UserNode* user;
 	CategoryNode* categoryHead;
 	CategoryNode* categoryTail;
-	int index = 0;
-	int userSize = 1; //0번노드 관리자 아이디
+	int userSize = 0; //0번노드 관리자 아이디
 	int categorySize = 0;
-	char menu;
 public:
+	void run() {
+		loadFile();
+		if (!checkID("manager")) addManagerNode();
+		firstMenu();
+	}
+	void firstMenu() {
+		char menu;
+		while (true) {
+			cout << "********** 마켓 **********" << endl;
+			cout << "1. 회원가입\n";
+			cout << "2. 로그인\n";
+			cout << "0. 종료\n";
+			cout << "메뉴: "; cin >> menu;
+			cout << endl;
+
+			switch (menu) {
+				UserNode* tmp;
+			case '1': addUserNode(); break;
+			case '2':
+				tmp = logIn();
+				if (tmp == NULL) break;
+				else {
+					user = tmp;
+					if (user->getData()->getId() == "manager" && user->getData()->getLogIn()) managerMenu(user);
+					else if (user->getData()->getLogIn()) userMenu(user);
+				}
+				break;
+			case '0':
+				cout << "종료합니다.";
+				saveFile();
+				return;
+			default: cout << "잘못 입력하셨습니다. 다시 입력해주세요." << endl << endl; break;
+			}
+		}
+	}
+	void userMenu(UserNode* user) {
+		char menu;
+		bool checkLogOut;
+		while (true) {
+			cout << "********** 마켓 **********" << endl;
+			cout << "1. 개인정보\n";
+			cout << "2. 충전하기\n";
+			cout << "3. 물건사기\n";
+			cout << "0. 로그아웃\n";
+			cout << "메뉴 : "; cin >> menu;
+			cout << endl;
+
+			switch (menu) {
+			case '1': checkLogOut = manageMyInfo(user); 
+				if (checkLogOut == true) return;
+				else break;
+			case '2': chargeMoney(user); break;
+			case '3': enterMarket(user); break;
+			case '0': logOut(user); return;
+			default:  cout << "잘못 입력하셨습니다. 다시 입력해주세요." << endl << endl; break;
+			}
+		}
+	}
+	bool manageMyInfo(UserNode* user) {
+		char menu;
+		while (true) {
+			cout << "********** 개인정보 **********" << endl;
+			cout << "1. 개인정보 열람\n";
+			cout << "2. 개인정보 수정\n";
+			cout << "3. 회원탈퇴\n";
+			cout << "0. 뒤로가기\n";
+			cout << "메뉴 : "; cin >> menu;
+			cout << endl;
+
+			switch (menu) {
+			case '1': viewMyInfo(user); break;
+			case '2': modifyMyInfo(user); return true;
+			case '3': deleteAccount(user); return true;
+			case '0': return false;
+			default: cout << "잘못 입력하셨습니다. 다시 입력해주세요." << endl << endl; break;
+			}
+		}
+	}
+	void managerMenu(UserNode* user) {
+		char menu;
+		while (true) {
+			cout << "********** 관리자 **********" << endl;
+			cout << "1. 물품 관리\n";
+			cout << "2. 카테고리 관리\n";
+			cout << "3. 회원정보 관리\n";
+			cout << "0. 로그아웃\n";
+			cout << "메뉴 : "; cin >> menu;
+			cout << endl;
+
+			switch (menu) {
+			case '1': manageProduct(); break;
+			case '2': manageCategory(); break;
+			case '3': manageUserInfo(); break;//유저정보 관리
+			case '0': logOut(user); return;
+			default: cout << "잘못 입력하셨습니다. 다시 입력해주세요." << endl << endl; break;
+			}
+		}
+	}
+	void manageProduct() {
+		char menu;
+		while (true) {
+			cout << "********** 물품관리 ***********" << endl;
+			cout << "1. 제품 찾기\n";
+			cout << "2. 모든 제품 리스트 보기\n";
+			cout << "3. 제품 관리\n";
+			cout << "4. 새 품목 추가\n";
+			cout << "5. 품목 삭제\n";
+			cout << "0. 뒤로가기\n";
+			cout << "메뉴 : "; cin >> menu;
+			cout << endl;
+
+			switch (menu) {
+			case '1': viewProduct(); break;
+			case '2': viewAllProduct(); break;
+			case '3': modifyProduct(); break;//제품의 수량을 관리
+			case '4': addNewProduct(); break;//새 제품을 추가
+			case '5': deleteProduct(); break;//제품 자체를 삭제
+			case '0': return;
+			default: cout << "잘못 입력하셨습니다. 다시 입력해주세요." << endl << endl; break;
+			}
+		}
+	}
+	void manageCategory() {
+		char menu;
+		while (true) {
+			cout << "********** 카테고리관리 **********" << endl;
+			cout << "1. 카테고리 추가\n";
+			cout << "2. 카테고리 삭제\n";
+			cout << "3. 카테고리 이름변경\n";
+			cout << "0. 뒤로가기\n";
+			cout << "메뉴 : "; cin >> menu;
+			cout << endl;
+
+			switch (menu) {
+			case '1': addCategory(); break;
+			case '2': deleteCategory(); break;
+			case '3': renameCategory(); break;
+			case '0': return;
+			default: cout << "잘못 입력하셨습니다. 다시 입력해주세요." << endl << endl; break;
+			}
+		}
+	}
+	void manageUserInfo() {
+		char menu;
+		while (true) {
+			cout << "********** 회원정보 관리 **********" << endl;
+			cout << "1. 회원정보 열람\n";
+			cout << "2. 모든 회원정보 열람\n";
+			cout << "3. 회원정보 수정\n";
+			cout << "4. 회원정보 삭제\n";
+			cout << "0. 뒤로가기\n";
+			cout << "관리하고 싶은 목록을 선택해주세요: "; cin >> menu;
+			cout << endl;
+
+			switch (menu) {
+			case'1': viewUserInfo(); break;
+			case'2': viewAllInfo(); break;
+			case'3': modifyUserInfo(); break;
+			case'4': deleteUser(); break;
+			case'0': return;
+			default: cout << "잘못 입력하셨습니다." << endl; break;
+			}
+		}
+	}
 	int getCategorySize() {
 		CategoryNode* ptr = categoryHead;
 		int i = 0;
@@ -297,111 +459,13 @@ public:
 		return categoryHead;
 	}
 	void addManagerNode() {
-		if (userHead == NULL) {
+		if (userSize == 0) {
 			UserNode* user = new UserNode();
 			user->setData("manager", "1234", "김동하", "01075444357", 0, 0);
 			userHead = userTail = user;
+			userSize++;
 		}
 		else return;
-	}
-	void run() {
-		loadFile();
-		if (userSize == 0) addManagerNode();
-		while (true) {
-			if (index == 0) {
-				cout << "********** 마켓 **********" << endl;
-				cout << "1. 회원가입\n";
-				cout << "2. 로그인\n";
-				cout << "0. 종료\n";
-				cout << "메뉴: "; cin >> menu;
-				cout << endl;
-
-				switch (menu) {
-					UserNode* tmp;
-				case '1': addUserNode(); break;
-				case '2':
-					tmp = logIn();
-					if (tmp == NULL) break;
-					else {
-						user = tmp;
-						if (user->getData()->getId() == "manager" && user->getData()->getLogIn()) index = 3;
-						else if (user->getData()->getLogIn()) index = 1;
-					}
-					break;
-				case '0':
-					cout << "종료합니다.";
-					saveFile();
-					return;
-				default: cout << "잘못 입력하셨습니다. 다시 입력해주세요." << endl << endl; break;
-				}
-			}
-
-			if (index == 1) {
-				cout << "********** 마켓 **********" << endl;
-				cout << "1. 개인정보\n";
-				cout << "2. 충전하기\n";
-				cout << "3. 물건사기\n";
-				cout << "4. 로그아웃\n";
-				cout << "메뉴 : "; cin >> menu;
-				cout << endl;
-
-				switch (menu) {
-				case '1': index = 2; break;
-				case '2': chargeMoney(user); break;
-				case '3': enterMarket(user); break;
-				case '4': logOut(user); index = 0; break;
-				default:  cout << "잘못 입력하셨습니다. 다시 입력해주세요." << endl << endl; break;
-				}
-			}
-
-			if (index == 2) {
-				cout << "********** 개인정보 **********" << endl;
-				cout << "1. 개인정보 열람\n";
-				cout << "2. 개인정보 수정\n";
-				cout << "3. 회원탈퇴\n";
-				cout << "4. 뒤로가기\n";
-				cout << "메뉴 : "; cin >> menu;
-				cout << endl;
-
-				switch (menu) {
-				case '1': viewMyInfo(user); break;
-				case '2': modifyMyInfo(user); index = 0; break;
-				case '3': deleteAccount(user); index = 0; break;
-				case '4': index = 1; break;
-				default: cout << "잘못 입력하셨습니다. 다시 입력해주세요." << endl << endl; break;
-				}
-			}
-
-			if (index == 3) {
-				cout << "********** 관리자 **********" << endl;
-				cout << "1. 제품 찾기\n";
-				cout << "2. 모든 제품 리스트 보기\n";
-				cout << "3. 제품 관리\n";
-				cout << "4. 새 품목 추가\n";
-				cout << "5. 품목 삭제\n";
-				cout << "6. 카테고리 추가\n";
-				cout << "7. 카테고리 삭제\n";
-				cout << "8. 카테고리 이름변경\n";
-				cout << "9. 회원정보 관리\n";
-				cout << "0. 로그아웃\n";
-				cout << "메뉴 : "; cin >> menu;
-				cout << endl;
-
-				switch (menu) {
-				case '1': viewProduct(); break;
-				case '2': viewAllProduct(); break;
-				case '3': manageProduct(); break;//제품의 수량을 관리
-				case '4': addNewProduct(); break;//새 제품을 추가
-				case '5': deleteProduct(); break;//제품 자체를 삭제
-				case '6': addCategory(); break;
-				case '7': deleteCategory(); break;
-				case '8': renameCategory(); break;
-				case '9': manageUserInfo(); break;//유저정보 관리
-				case '0': logOut(user); index = 0; break;
-				default: cout << "잘못 입력하셨습니다. 다시 입력해주세요." << endl << endl; break;
-				}
-			}
-		}
 	}
 	void addUserNode() {
 		string id, pw, name, phone;
@@ -512,7 +576,7 @@ public:
 		cout << endl << endl;
 
 		if (!checkID(id)) {
-			user->setData(id, pw, name, phone);
+			user->setData(id, pw, name, phone, user->getData()->getMoney(), 0);
 			cout << "개인정보수정이 완료되었습니다. 다시 로그인 해주십시오." << endl << endl;
 		}
 		else {
@@ -720,7 +784,7 @@ public:
 		return NULL;
 	}
 
-	void manageProduct() {
+	void modifyProduct() {
 		cout << "********** 품목 관리 **********" << endl;
 		string name;
 		char select;
@@ -767,31 +831,10 @@ public:
 		}
 	}
 
-	void manageUserInfo() {
-		char select;
-		cout << "********** 회원정보 관리 **********" << endl;
-		cout << "1. 회원정보 열람\n";
-		cout << "2. 모든 회원정보 열람\n";
-		cout << "3. 회원정보 수정\n";
-		cout << "4. 회원정보 삭제\n";
-		cout << "5. 뒤로가기\n";
-		cout << "관리하고 싶은 목록을 선택해주세요: "; cin >> select;
-		cout << endl;
-
-		switch (select) {
-		case'1': viewUserInfo(); break;
-		case'2': viewAllInfo(); break;
-		case'3': modifyUserInfo(); break;
-		case'4': deleteUser(); break;
-		case'5': return;
-		default: cout << "잘못 입력하셨습니다." << endl; break;
-		}
-	}
-
 	void viewUserInfo() {
 		string id;
 		UserNode* user;
-		cout << "찾고싶은 ID를 입력하십시오: "; cin >> id;
+		cout << "찾고싶은 ID를 입력하십시오: "; cin >> id;;
 		if (checkID(id)) {
 			user = findID(id);
 			user->show();
@@ -1006,51 +1049,18 @@ public:
 	}
 
 	void enterMarket(UserNode* user) {
-		int menu;
 		CategoryNode* category;
 		ProductNode* product;
 		int quantity;
 		char yn;
 		cout << "********** 마켓 **********" << endl;
 		while (true) {
-			category = getCategoryHead();
-			for (int i = 0; i < getCategorySize(); i++) {
-				cout << i + 1 << ". " << category->getData()->getCtg() << endl;
-				category = category->getNext();
-			}
-			cout << "0. 종료" << endl;
-			cout << endl;
 			while (true) {
-				cout << "구매하실 물건의 카테고리 번호를 골라주세요: "; cin >> menu;
-				cout << endl;
-				if (menu <= getCategorySize() && menu >= 0) break;
-				else cout << "잘못입력하셨습니다." << endl << endl;
+				category = showCategoryList();
+				if (category == NULL) return;
+				product = showProductList(category);
+				if (product != NULL) break;
 			}
-			category = getCategoryHead();
-			if (menu == 0) break;
-			for (int i = 0; i < menu - 1; i++) {
-				category = category->getNext();
-			}
-
-			product = category->getProductHead();
-			for (int i = 0; i < getProductSize(category); i++) {
-				cout << i + 1 << ". "; product->show();
-				product = product->getNext();
-			}
-			cout << endl;
-
-			while (true) {
-				cout << "구매하실 물건을 골라주세요: "; cin >> menu;
-				cout << endl;
-				if (menu <= getProductSize(category) && menu >= 0) break;
-				else cout << "잘못입력하셨습니다." << endl << endl;
-			}
-
-			product = category->getProductHead();
-			for (int i = 0; i < menu - 1; i++) {
-				product = product->getNext();
-			}
-
 			while (true) {
 				cout << "구매하실 물건의 수량을 입력해주세요: "; cin >> quantity;
 				if (user->getData()->getMoney() < product->getData()->getPrice() * quantity) {
@@ -1094,10 +1104,60 @@ public:
 			}
 		}
 	}
+	CategoryNode* showCategoryList() {
+		int menu;
+		CategoryNode* category;
+		while (true) {
+			category = getCategoryHead();
+			for (int i = 0; i < getCategorySize(); i++) {
+				cout << i + 1 << ". " << category->getData()->getCtg() << endl;
+				category = category->getNext();
+			}
+			cout << "0. 종료" << endl;
+			cout << endl;
+			while (true) {
+				cout << "구매하실 물건의 카테고리 번호를 골라주세요: "; cin >> menu;
+				cout << endl;
+				if (menu <= getCategorySize() && menu >= 0) break;
+				else cout << "잘못입력하셨습니다." << endl << endl;
+			}
+			if (menu == 0) return NULL;
+			category = getCategoryHead();
+			for (int i = 0; i < menu - 1; i++) {
+				category = category->getNext();
+			}
+			return category;
+		}
+	}
+	ProductNode* showProductList(CategoryNode* category) {
+		ProductNode* product;
+		int menu;
 
+		product = category->getProductHead();
+		for (int i = 0; i < getProductSize(category); i++) {
+			cout << i + 1 << ". "; product->show();
+			product = product->getNext();
+		}
+		cout << "0. 뒤로가기";
+		cout << endl;
+
+		while (true) {
+			cout << "구매하실 물건을 골라주세요: "; cin >> menu;
+			cout << endl;
+			if (menu <= getProductSize(category) && menu >= 0) break;
+			else cout << "잘못입력하셨습니다." << endl << endl;
+		}
+		if (menu == 0) return NULL;
+		product = category->getProductHead();
+		for (int i = 0; i < menu - 1; i++) {
+			product = product->getNext();
+		}
+		return product;
+	}
 	void buy(UserNode* user, ProductNode* product, int quantity) {
 		if (user->getData()->getMoney() > (product->getData()->getPrice() * quantity)) {
 			user->getData()->setMoney(user->getData()->getMoney() - (product->getData()->getPrice() * quantity));
+			product->getData()->setQuantity(product->getData()->getQuantity() - quantity);
 			cout << "거래를 완료하였습니다. 현재 남은 잔액은 " << user->getData()->getMoney() << "원 입니다." << endl << endl;
 		}
 		else cout << "잔액이 부족합니다." << endl << endl;
